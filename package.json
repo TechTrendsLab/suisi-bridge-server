@@ -1,22 +1,30 @@
 {
-  "name": "backend",
+  "name": "suisi-bridge-server",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "BSC-Sui Bridge Unlock Server",
+  "main": "dist/server.js",
+  "type": "module",
   "scripts": {
+    "dev": "tsx watch server.ts",
+    "build": "tsc",
+    "start": "node dist/server.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "type": "commonjs",
   "dependencies": {
-    "@mysten/bcs": "^1.9.2",
     "@mysten/sui": "^1.45.0",
-    "axios": "^1.13.2",
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",
     "ethers": "^6.15.0",
     "express": "^5.1.0"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.17",
+    "@types/express": "^5.0.0",
+    "@types/node": "^22.19.1",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2"
   }
 }
