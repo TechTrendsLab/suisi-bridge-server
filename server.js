@@ -216,27 +216,28 @@ setInterval(async () => {
         // 配置 Object ID
         const packageId = process.env.SURGE_PACKAGE_ID;
         const wormholeStateId = process.env.WORMHOLE_STATE_ID; // Wormhole 核心状态对象
-        const surgeStateId = process.env.SURGE_STATE_ID;       // 我们合约的 State 对象
+        const surgeBridgeStateId = process.env.SURGE_BRIDGE_STATE_ID; // Surge Bridge State
         const clockId = "0x6";                                 // 系统 Clock
 
-        if (!packageId || !wormholeStateId || !surgeStateId) {
+        if (!packageId || !wormholeStateId || !surgeBridgeStateId) {
             throw new Error("Sui Contract Config missing in .env");
         }
 
-        // 调用 complete_transfer
-        // public fun complete_transfer(
-        //     wormhole_state: &WormholeState,
-        //     surge_state: &mut State,
-        //     encoded_vaa: vector<u8>,
-        //     clock: &Clock
+        // 调用 unlock (Move function name is unlock in surge.move)
+        // public fun unlock(
+        //     surge_state: &mut SurgeBridgeState,
+        //     state: &mut State,
+        //     buf: vector<u8>,
+        //     clock: &Clock,
+        //     ctx: &mut TxContext
         // )
         tx.moveCall({
-            target: `${packageId}::surge::complete_transfer`,
+            target: `${packageId}::surge::unlock`,
             arguments: [
-                tx.object(wormholeStateId),
-                tx.object(surgeStateId),
-                tx.pure(vaaArray),
-                tx.object(clockId)
+                tx.object(surgeBridgeStateId), // 1. SurgeBridgeState
+                tx.object(wormholeStateId),    // 2. Wormhole State
+                tx.pure(vaaArray),             // 3. VAA Bytes
+                tx.object(clockId)             // 4. Clock
             ]
         });
 
