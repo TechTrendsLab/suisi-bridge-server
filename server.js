@@ -5,7 +5,7 @@ const axios = require('axios');
 const { ethers } = require('ethers');
 const { Ed25519Keypair } = require('@mysten/sui/keypairs/ed25519');
 const { SuiClient, getFullnodeUrl } = require('@mysten/sui/client');
-const { TransactionBlock } = require('@mysten/sui/transactions');
+const { Transaction } = require('@mysten/sui/transactions');
 const { fromB64 } = require('@mysten/bcs');
 require('dotenv').config();
 
@@ -193,17 +193,30 @@ setInterval(async () => {
         let privateKey = process.env.SUI_PRIVATE_KEY;
         let keypair;
         
+const { decodeSuiPrivateKey } = require('@mysten/sui/cryptography');
+
+// ...
+
         try {
-             // 尝试作为 base64 密钥处理
-             // 注意：如果是 suiprivkey 开头，需要用 SDK 解析，这里假设是 raw bytes base64
-             // 如果你的 .env 里存的是 'suiprivkey1...', 请使用 fromBech32
-             // 这里演示最直接的 buffer 导入
-             const rawKey = fromB64(privateKey);
-             // 剔除可能的 flag byte (ed25519 通常第一位是 0)
-             const keyBytes = rawKey.length === 33 ? rawKey.slice(1) : rawKey;
-             keypair = Ed25519Keypair.fromSecretKey(keyBytes);
+             // 支持 suiprivkey (Bech32) 或 Base64 格式
+             let keypair;
+             if (privateKey.startsWith('suiprivkey')) {
+                 const { secretKey } = decodeSuiPrivateKey(privateKey);
+                 keypair = Ed25519Keypair.fromSecretKey(secretKey);
+             } else {
+                 // 尝试作为 base64 密钥处理
+                 const rawKey = fromB64(privateKey);
+                 // 剔除可能的 flag byte (ed25519 通常第一位是 0)
+                 const keyBytes = rawKey.length === 33 ? rawKey.slice(1) : rawKey;
+                 
+                 if (keyBytes.length !== 32) {
+                     throw new Error(`Invalid key length: ${keyBytes.length}. Expected 32 bytes.`);
+                 }
+                 
+                 keypair = Ed25519Keypair.fromSecretKey(keyBytes);
+             }
         } catch(err) {
-             console.error("[Sui Worker] 私钥解析失败，请检查格式。支持 Base64 raw bytes");
+             console.error("[Sui Worker] 私钥解析失败，请检查格式。支持 suiprivkey... 或 Base64");
              throw err;
         }
 
@@ -211,7 +224,7 @@ setInterval(async () => {
         // Sui Move Call 需要 vector<u8>，在 JS SDK 中通常传 Uint8Array 或 array
         const vaaArray = new Uint8Array(vaaBytes);
 
-        const tx = new TransactionBlock();
+        const tx = new Transaction();
         
         // 配置 Object ID
         const packageId = process.env.SURGE_PACKAGE_ID;
