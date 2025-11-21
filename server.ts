@@ -136,13 +136,17 @@ async function executeUnlockOnSui(vaaBytes: number[]): Promise<string> {
   
   const tx = new Transaction();
   
+  // surge_state: &mut SurgeBridgeState,
+  // state: &mut State,
+  // buf: vector<u8>,
+  // clock: &Clock,
   tx.moveCall({
     target: `${SUI_PACKAGE_ID}::surge::unlock`,
     arguments: [
       tx.object(SUI_BRIDGE_STATE),
       tx.object(SUI_STATE),
       tx.pure.vector('u8', vaaBytes),
-      tx.object('0x6') // Clock
+      tx.object('0x6') 
     ],
   });
   
