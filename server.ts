@@ -43,11 +43,7 @@ function initClients() {
     // 初始化 Sui
     suiClient = new SuiClient({ url: SUI_RPC_URL });
     const privateKeyBase64 = process.env.SUI_PRIVATE_KEY!;
-    const privateKeyBytes = Buffer.from(privateKeyBase64, 'base64');
-    const keyBytes = privateKeyBytes.length === 33 
-      ? privateKeyBytes.subarray(1) 
-      : privateKeyBytes;
-    suiKeypair = Ed25519Keypair.fromSecretKey(keyBytes);
+    suiKeypair = Ed25519Keypair.fromSecretKey(privateKeyBase64);
     const suiAddress = suiKeypair.getPublicKey().toSuiAddress();
     console.log('✅ Sui 客户端初始化成功');
     console.log('📍 Sui 地址:', suiAddress);
@@ -95,7 +91,7 @@ async function queryVAA(txHash: string): Promise<{ vaa: number[], raw: string, s
     }
     
     const vaaBytes = base64ToBytes(operation.vaa.raw);
-    const sourceChain = operation.emitterChain; // 4=BSC, 21=Sui
+    const sourceChain = operation.emitterChain;
     
     console.log(`✅ VAA 获取成功，长度: ${vaaBytes.length} bytes, 源链: ${sourceChain}`);
     
@@ -247,7 +243,6 @@ app.post('/api/bridge', async (req, res) => {
       throw new Error(`不支持的源链 ID: ${vaaData.sourceChain}`);
     }
     
-    // 3. 返回结果
     res.json({
       success: true,
       message: '跨链成功',
